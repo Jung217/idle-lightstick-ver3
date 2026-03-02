@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>idle Lightstick hacker</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #1a1a1a;
+            color: white;
+            padding: 50px 20px;
+        }
+        .panel {
+            background: #2a2a2a;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        button {
+            background: #ea4c89;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 10px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover { background: #f082ac; }
+        button:disabled { background: #555; cursor: not-allowed; }
+        #status {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #aaa;
+        }
+        .color-btns { margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="panel">
+        <h2>🪄 Neverland 專屬中控台</h2>
+        <button id="connectBtn">尋找並連線手燈</button>
+        
+        <div class="color-btns">
+            <button id="redBtn" disabled>變成紅色</button>
+            <button id="blueBtn" disabled>變成藍色</button>
+            <button id="purpleBtn" disabled>變成紫色</button>
+            <button id="offBtn" disabled>關閉燈光</button>
+        </div>
+
+        <div id="status">狀態：等待連線...</div>
+    </div>
+
+    <script>
+        // 拆 apk 找到的 UUID
+        const TARGET_UUID = "00000000-0000-1000-8000-00805f9b34fb";
+        let lightstickCharacteristic = null;
+
+        // 1. 藍牙連線邏輯
+        document.getElementById('connectBtn').addEventListener('click', async () => {
+            const statusText = document.getElementById('status');
+            try {
+                statusText.innerText = "狀態：正在請求藍牙權限...";
+                
+                // 起用瀏覽器的藍牙配對，並過濾出的手燈
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: [{ services: [TARGET_UUID] }]
+                });
+
+                statusText.innerText = "狀態：正在連線到 " + device.name + "...";
+                
+                // 建立連線並取得通訊特徵值 (Characteristic)
+                const server = await device.gatt.connect();
+                const service = await server.getPrimaryService(TARGET_UUID);
+                lightstickCharacteristic = await service.getCharacteristic(TARGET_UUID);
+
+                statusText.innerText = "狀態：連線成功！";
+                
+                // 解鎖變色按鈕
+                document.querySelectorAll('.color-btns button').forEach(btn => btn.disabled = false);
+
+            } catch (error) {
+                statusText.innerText = "連線失敗或取消: " + error;
+            }
+        });
+
+        // 2. 發送指令邏輯
+        async function sendColorCommand(hexColor) {
+            if (!lightstickCharacteristic) return;
+            
+            // 按照逆向工程解開的格式組裝指令： 
+            // 8201 + 顏色(Hex) + 0000000000 + FD + GRAVE(4752415645)
+            const cmdString = "8201" + hexColor + "0000000000FD4752415645";
+            
+            // 將十六進位字串轉換為藍牙需要的 Byte 陣列 (Uint8Array)
+            const bytesArray = new Uint8Array(cmdString.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+
+            try {
+                // 使用 WriteWithoutResponse (Type 2) 寫入硬體
+                await lightstickCharacteristic.writeValueWithoutResponse(bytesArray);
+                console.log("成功發送指令:", cmdString);
+            } catch (error) {
+                console.error("寫入失敗:", error);
+            }
+        }
+
+        // 3. 綁定按鈕事件 (傳入對應的 RGB Hex 碼)
+        document.getElementById('redBtn').addEventListener('click', () => sendColorCommand("FF0000"));
+        document.getElementById('blueBtn').addEventListener('click', () => sendColorCommand("0000FF"));
+        document.getElementById('purpleBtn').addEventListener('click', () => sendColorCommand("5E0D8B")); // 官方紫色
+        document.getElementById('offBtn').addEventListener('click', () => sendColorCommand("000000"));
+    </script>
+</body>
+</html>
