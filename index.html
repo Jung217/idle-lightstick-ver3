@@ -7,17 +7,29 @@
     <title>Lightstick Hacker V3</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            /* 防止整個頁面被滑動 */
+            touch-action: none;
+            /* 禁用預設的觸控滑動行為 */
+        }
+
         body {
             font-family: system-ui, -apple-system, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
+            /* 讓面板在網頁中居中 */
             background-color: rgb(27, 16, 60);
             /* 依據使用者指定的色碼更換背景 */
             color: white;
-            padding: 40px 20px;
-            margin: 0;
-            min-height: 100vh;
+            box-sizing: border-box;
         }
 
         .panel {
@@ -28,9 +40,15 @@
             /* 增強紫紅發光 */
             text-align: center;
             max-width: 450px;
-            width: 100%;
+            width: 90%;
+            /* 手機上左右留點邊距 */
             border: 1px solid #41194a;
             /* 邊框也帶點紫暗色 */
+            box-sizing: border-box;
+            max-height: 95vh;
+            /* 避免螢幕過小被截斷 */
+            overflow-y: auto;
+            /* 若螢幕真的太小，只允許面板內部滾動 */
         }
 
         .section {
@@ -57,8 +75,8 @@
 
         /* 連線按鈕 */
         #connectBtn {
-            background: linear-gradient(135deg, #ea4c89, #b52c6b);
-            /* 全局紫紅漸層 */
+            background: linear-gradient(135deg, #ff00ff, #cc00cc);
+            /* 全局紫紅漸層改為 FF00FF 基底 */
             color: white;
             border: none;
             padding: 12px 24px;
@@ -67,14 +85,15 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(234, 76, 137, 0.5);
+            box-shadow: 0 4px 15px rgba(255, 0, 255, 0.5);
+            /* 紫紅發光陰影 (#FF00FF = 255, 0, 255) */
             width: 80%;
             margin-top: 15px;
         }
 
         #connectBtn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(234, 76, 137, 0.8);
+            box-shadow: 0 6px 20px rgba(255, 0, 255, 0.8);
         }
 
         #connectBtn.connected {
@@ -127,6 +146,7 @@
         }
 
         input[type="color"] {
+            appearance: none;
             -webkit-appearance: none;
             border: none;
             width: 120px;
@@ -166,6 +186,7 @@
 
         input[type="range"] {
             flex-grow: 1;
+            appearance: none;
             -webkit-appearance: none;
             height: 6px;
             background: #444;
@@ -174,14 +195,15 @@
         }
 
         input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
             -webkit-appearance: none;
             width: 18px;
             height: 18px;
             border-radius: 50%;
-            background: #ea4c89;
+            background: #ff00ff;
             /* 修改拉桿圓鈕為紫紅色 */
             cursor: pointer;
-            box-shadow: 0 0 10px rgba(234, 76, 137, 0.6);
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.6);
         }
 
         /* 快捷色與功能鍵 */
@@ -208,22 +230,23 @@
         }
 
         .action-btn {
-            background: #2a0b18;
-            color: #ea4c89;
-            border: 1px solid #ea4c89;
+            background: #2a0b2a;
+            /* 配合 #ff00ff 的暗底色 */
+            color: #ff00ff;
+            border: 1px solid #ff00ff;
             padding: 10px 20px;
             border-radius: 8px;
             font-size: 14px;
             cursor: pointer;
             transition: 0.2s;
             margin: 5px;
-            box-shadow: 0 0 10px rgba(234, 76, 137, 0.2);
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.2);
         }
 
         .action-btn:hover {
-            background: #ea4c89;
+            background: #ff00ff;
             color: white;
-            box-shadow: 0 0 15px rgba(234, 76, 137, 0.5);
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
         }
 
         #offBtn {
@@ -242,7 +265,7 @@
         /* 數值顯示 */
         .value-display {
             font-family: monospace;
-            color: #ea4c89;
+            color: #ff00ff;
             font-size: 12px;
             margin-top: 10px;
             background: #111;
@@ -320,8 +343,8 @@
         <div id="controlArea">
             <div class="section">
                 <div class="color-picker-container">
-                    <input type="color" id="colorPicker" value="#ea4c89">
-                    <div class="value-display" id="hexDisplay">HEX: #EA4C89 | BRT: 100%</div>
+                    <input type="color" id="colorPicker" value="#ff00ff">
+                    <div class="value-display" id="hexDisplay">HEX: #FF00FF | BRT: 100%</div>
                 </div>
 
                 <div class="slider-container">
@@ -331,7 +354,7 @@
                 </div>
 
                 <div class="quick-colors">
-                    <div class="color-btn" style="background-color: #ea4c89;" data-color="#ea4c89" title="官方紫紅"></div>
+                    <div class="color-btn" style="background-color: #ff00ff;" data-color="#ff00ff" title="官方紫"></div>
                     <div class="color-btn" style="background-color: #ff0000;" data-color="#ff0000" title="正紅"></div>
                     <div class="color-btn" style="background-color: #00ff00;" data-color="#00ff00" title="純綠"></div>
                     <div class="color-btn" style="background-color: #0000ff;" data-color="#0000ff" title="純藍"></div>
@@ -340,6 +363,8 @@
             </div>
 
             <div class="section" style="padding-top: 15px;">
+                <button class="action-btn" id="seqLightBtn" style="border-color: #3498db; color: #3498db;">跑馬燈
+                    (依序點亮)</button>
                 <button class="action-btn" id="offBtn">關閉光芒</button>
             </div>
         </div>
@@ -363,7 +388,7 @@
         const hexDisplay = document.getElementById('hexDisplay');
 
         // 目前選擇的狀態
-        let currentColorHex = "#ea4c89";
+        let currentColorHex = "#ff00ff";
         let currentBrightness = 100;
         let lastSentPayload = ""; // 避免重複發送相同的封包
 
@@ -421,7 +446,7 @@
                 showToast("手燈連線成功！", "success");
 
                 // 連線後發送目前的面板顏色 (強制設為官方紫)
-                currentColorHex = "#ea4c89";
+                currentColorHex = "#ff00ff";
                 colorPicker.value = currentColorHex;
                 currentBrightness = 100;
                 brightnessSlider.value = currentBrightness;
@@ -436,6 +461,7 @@
 
         function onDisconnected() {
             lightstickCharacteristic = null;
+            if (seqLightInterval) clearInterval(seqLightInterval);
             statusText.innerText = "設備已斷線";
             statusDot.classList.remove('active');
             connectBtn.innerText = "重新連線";
@@ -526,12 +552,80 @@
 
         // 關閉按鈕
         document.getElementById('offBtn').addEventListener('click', () => {
+            if (seqLightInterval) {
+                clearInterval(seqLightInterval); // 停止跑馬燈
+                seqLightInterval = null;
+            }
             // 將亮度設為 0
             currentBrightness = 0;
             brightnessSlider.value = 0;
             brightnessLabel.innerText = "0%";
             updateAndSendColor();
             showToast("光芒已關閉", "info");
+        });
+
+        // 依序點亮 (Sequential Lighting) 邏輯
+        let seqLightInterval = null;
+        let seqCurrentPixel = 0;
+        const TOTAL_PIXELS = 12; // 假設手燈有 12 顆燈珠 (需要根據實體驗證調整)
+
+        document.getElementById('seqLightBtn').addEventListener('click', () => {
+            if (!lightstickCharacteristic) return;
+
+            // 如果已經在跑，就停止
+            if (seqLightInterval) {
+                clearInterval(seqLightInterval);
+                seqLightInterval = null;
+                showToast("已停止跑馬燈", "info");
+                return;
+            }
+
+            // 先整支關燈
+            sendRawData("82010000000000000000FD4752415645", true);
+
+            seqCurrentPixel = 0;
+            showToast("跑馬燈啟動！", "success");
+
+            // 解析當前 UI 選擇的顏色
+            let r = parseInt(currentColorHex.slice(1, 3), 16);
+            let g = parseInt(currentColorHex.slice(3, 5), 16);
+            let b = parseInt(currentColorHex.slice(5, 7), 16);
+
+            const multiplier = currentBrightness / 100;
+            r = Math.round(r * multiplier);
+            g = Math.round(g * multiplier);
+            b = Math.round(b * multiplier);
+
+            const rHex = r.toString(16).padStart(2, '0').toUpperCase();
+            const gHex = g.toString(16).padStart(2, '0').toUpperCase();
+            const bHex = b.toString(16).padStart(2, '0').toUpperCase();
+            const colorPayload = `${rHex}${gHex}${bHex}00`; // RGBW
+
+            // 每 150 毫秒點亮下一顆燈
+            seqLightInterval = setInterval(async () => {
+                if (seqCurrentPixel >= TOTAL_PIXELS) {
+                    clearInterval(seqLightInterval);
+                    seqLightInterval = null;
+                    return;
+                }
+
+                // 810D 協定: 810D + 起始位置(0000~003F) + 第一顆顏色 + 第二顆顏色...
+                // 這裡我們每次只亮目前這一顆，之前的燈珠會保持亮度(若是全域控制的變種)，
+                // 實務上 810D 是覆寫陣列。更嚴格的做法是送出一整段包含前面都亮著的陣列，
+                // 但根據之前實驗 5 的經驗： `810D0000FF0000000000FF00`
+                // 這裡我們嘗試動態組裝：從第 0 顆開始，長度視 seqCurrentPixel 而定
+                let cmdArray = "810D" + "0000"; // 從 0 號燈珠開始覆寫
+
+                // 將 0 ~ seqCurrentPixel 的燈珠塞入顏色
+                for (let i = 0; i <= seqCurrentPixel; i++) {
+                    cmdArray += colorPayload;
+                }
+
+                // 810D (依據之前的探勘) 是不需要加密的明文傳輸
+                await sendRawData(cmdArray, false);
+
+                seqCurrentPixel++;
+            }, 200);
         });
 
     </script>
