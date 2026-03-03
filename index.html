@@ -3,61 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lightstick Hacker V2</title>
+    <title>Lightstick Hacker V3</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #1a1a1a;
-            color: white;
-            padding: 40px 20px;
-        }
-        .panel {
-            background: #2a2a2a;
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            text-align: center;
-            max-width: 500px;
-            width: 100%;
-        }
-        .section {
-            margin-top: 25px;
-            padding-top: 20px;
-            border-top: 1px solid #444;
-        }
-        h2, h3 { margin: 0 0 15px 0; }
-        h3 { color: #ea4c89; font-size: 18px; }
-        
-        button {
-            background: #ea4c89;
-            color: white;
-            border: none;
-            padding: 10px 18px;
-            margin: 6px;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-        }
+        body { font-family: system-ui, -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #1a1a1a; color: white; padding: 40px 20px; }
+        .panel { background: #2a2a2a; padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; max-width: 500px; width: 100%; }
+        .section { margin-top: 25px; padding-top: 20px; border-top: 1px solid #444; }
+        h2, h3 { margin: 0 0 15px 0; } h3 { color: #ea4c89; font-size: 18px; }
+        button { background: #ea4c89; color: white; border: none; padding: 10px 18px; margin: 6px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         button:hover { background: #f082ac; transform: scale(1.05); }
         button:disabled { background: #555; cursor: not-allowed; transform: none; }
-        
-        .btn-exp { background: #8e44ad; }
-        .btn-exp:hover { background: #9b59b6; }
-        
+        .btn-exp { background: #8e44ad; } .btn-exp:hover { background: #9b59b6; }
         #status { margin-top: 15px; font-size: 14px; color: #aaa; }
-        
-        /* Toast 提示框樣式 */
         #toast-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
         .toast { background: #444; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); font-size: 14px; opacity: 0; transform: translateY(20px); animation: fade-in-up 0.3s forwards; }
-        .toast.success { border-left: 4px solid #2ecc71; }
-        .toast.error { border-left: 4px solid #e74c3c; }
-        .toast.info { border-left: 4px solid #3498db; }
+        .toast.success { border-left: 4px solid #2ecc71; } .toast.error { border-left: 4px solid #e74c3c; } .toast.info { border-left: 4px solid #3498db; }
         .toast.fade-out { animation: fade-out-down 0.3s forwards; }
         @keyframes fade-in-up { to { opacity: 1; transform: translateY(0); } }
         @keyframes fade-out-down { to { opacity: 0; transform: translateY(20px); } }
@@ -66,12 +26,12 @@
 <body>
 
     <div class="panel">
-        <h2>🪄 Neverland 中控台 V2</h2>
+        <h2>🪄 Neverland 中控台 V3</h2>
         <button id="connectBtn">尋找並連線手燈</button>
         <div id="status">狀態：等待連線...</div>
 
         <div class="section">
-            <h3>基礎顏色控制 (AES加密)</h3>
+            <h3>基礎顏色控制</h3>
             <button class="action-btn" id="redBtn" disabled>紅</button>
             <button class="action-btn" id="blueBtn" disabled>藍</button>
             <button class="action-btn" id="purpleBtn" disabled>官方紫</button>
@@ -79,16 +39,14 @@
         </div>
 
         <div class="section">
-            <h3>駭客盲測實驗區</h3>
+            <h3>🧪 像素級實驗區 (陣列控制)</h3>
             <p style="font-size: 12px; color: #bbb; text-align: left; margin-bottom: 15px;">
-                嘗試解鎖那排隱藏的指示燈，請觀察手燈點擊後的反應。
+                嘗試繞過藍牙長度限制，單獨控制特定燈珠。
             </p>
             
-            <button class="action-btn btn-exp" id="exp1Btn" disabled>實驗 1: 分區代碼 FF</button>
-            <button class="action-btn btn-exp" id="exp2Btn" disabled>實驗 2: 遮罩全開 (FFFFFFFF)</button>
-            <button class="action-btn btn-exp" id="exp3Btn" disabled>實驗 3: 隱藏模式 (FD改00)</button>
+            <button class="action-btn btn-exp" id="exp4Btn" disabled>實驗 4: 8202 超長明文 (會被截斷)</button>
             <br>
-            <button class="action-btn btn-exp" id="exp4Btn" style="background: #d35400;" disabled>實驗 4: 8202 陣列明文測試</button>
+            <button class="action-btn btn-exp" id="exp5Btn" style="background: #27ae60;" disabled>實驗 5: 810D 短陣列雙色測試</button>
         </div>
     </div>
 
@@ -111,7 +69,6 @@
             }, 3000);
         }
 
-        // AES 加密函數
         function encryptCommand(hexString) {
             const key = CryptoJS.enc.Hex.parse(AES_KEY_HEX);
             const plaintext = CryptoJS.enc.Hex.parse(hexString);
@@ -122,7 +79,6 @@
             return encrypted.ciphertext.toString(CryptoJS.enc.Hex).toUpperCase();
         }
 
-        // 藍牙連線
         document.getElementById('connectBtn').addEventListener('click', async () => {
             const statusText = document.getElementById('status');
             try {
@@ -140,27 +96,20 @@
                 statusText.innerText = "狀態：✅ 連線成功！";
                 showToast("手燈連線成功！解鎖所有按鈕", "success");
                 
-                // 解鎖所有按鈕
                 document.querySelectorAll('.action-btn').forEach(btn => btn.disabled = false);
-
             } catch (error) {
                 statusText.innerText = "狀態：❌ 連線失敗";
                 showToast("連線失敗: " + error.message, "error");
             }
         });
 
-        // 核心發送函數 (支援加密與不加密)
         async function sendRawData(hexString, useEncryption = true, successMessage = "指令已發送") {
             if (!lightstickCharacteristic) return;
-            
             try {
-                // 根據參數決定要不要過 AES 加密
                 const finalHex = useEncryption ? encryptCommand(hexString) : hexString;
                 console.log(`[送出封包] 原始: ${hexString} -> 最終: ${finalHex}`);
-                
                 const bytesArray = new Uint8Array(finalHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
                 await lightstickCharacteristic.writeValueWithoutResponse(bytesArray);
-                
                 showToast(successMessage, "success");
             } catch (error) {
                 showToast(`寫入失敗: ${error.message}`, "error");
@@ -168,43 +117,28 @@
             }
         }
 
-        // --- 綁定基礎控制按鈕 ---
+        // 基礎控制
         function sendBasicColor(hexColor) {
-            // 官方標準格式: 8201 + 顏色 + 00 (分區) + 00000000 (遮罩) + FD + 4752415645 (GRAVE)
             const rawCmd = "8201" + hexColor + "00" + "00000000" + "FD" + "4752415645";
-            sendRawData(rawCmd, true, `成功發送顏色: #${hexColor}`);
+            sendRawData(rawCmd, true, `發送全域顏色: #${hexColor}`);
         }
-        document.getElementById('redBtn').addEventListener('click', () => sendBasicColor("FF0000"));
-        document.getElementById('blueBtn').addEventListener('click', () => sendBasicColor("0000FF"));
-        document.getElementById('purpleBtn').addEventListener('click', () => sendBasicColor("5E0D8B")); 
-        document.getElementById('offBtn').addEventListener('click', () => sendBasicColor("000000"));
+        document.getElementById('redBtn').addEventListener('click', () => sendBasicColor("FF000000")); // 改用 RGBW
+        document.getElementById('blueBtn').addEventListener('click', () => sendBasicColor("0000FF00"));
+        document.getElementById('purpleBtn').addEventListener('click', () => sendBasicColor("5E0D8B00")); 
+        document.getElementById('offBtn').addEventListener('click', () => sendBasicColor("00000000"));
 
-        // --- 綁定駭客實驗按鈕 ---
-        // 實驗 1：改變分區代碼 (00 改成 FF)
-        document.getElementById('exp1Btn').addEventListener('click', () => {
-            const rawCmd = "8201" + "00FF00" + "FF" + "00000000" + "FD" + "4752415645"; // 測試綠色
-            sendRawData(rawCmd, true, "已發送實驗1 (分區 FF)");
-        });
-
-        // 實驗 2：改變 LED 遮罩 (00000000 改成 FFFFFFFF)
-        document.getElementById('exp2Btn').addEventListener('click', () => {
-            const rawCmd = "8201" + "00FF00" + "00" + "FFFFFFFF" + "FD" + "4752415645"; // 測試綠色
-            sendRawData(rawCmd, true, "已發送實驗2 (遮罩 FFFFFFFF)");
-        });
-
-        // 實驗 3：改變模式位元 (FD 改成 00)
-        document.getElementById('exp3Btn').addEventListener('click', () => {
-            const rawCmd = "8201" + "00FF00" + "00" + "00000000" + "00" + "4752415645"; // 測試綠色
-            sendRawData(rawCmd, true, "已發送實驗3 (FD改00)");
-        });
-
-        // 實驗 4：發送 8202 陣列測試 (從原始碼挖出的明文指令)
+        // 實驗 4：8202 超長明文
         document.getElementById('exp4Btn').addEventListener('click', () => {
-            // 這串是從 JS 原始碼 Ke 函數中還原出來的完整字串
             const rawCmd = "8202" + "FF00000000FF00000000FF00000000FFFF00000000FF00000000FF00000000FFFF00000000FF00000000FF00000000FFFF00000000FF";
-            
-            // 注意第二個參數是 false！代表不經過 AES 加密，直接送出明文
-            sendRawData(rawCmd, false, "已發送 8202 未加密明文測試");
+            sendRawData(rawCmd, false, "已發送 8202 (預期會被截斷)");
+        });
+
+        // 實驗 5：810D 短陣列雙色測試
+        document.getElementById('exp5Btn').addEventListener('click', () => {
+            // 810D(指令) + 0000(從第0顆開始) + FF000000(紅) + 0000FF00(藍)
+            const rawCmd = "810D" + "0000" + "FF000000" + "0000FF00";
+            // 注意：一樣傳 false，不進行 AES 加密！
+            sendRawData(rawCmd, false, "已發送 810D 短陣列明文測試");
         });
     </script>
 </body>
