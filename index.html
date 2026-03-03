@@ -96,19 +96,38 @@
         async function sendColorCommand(hexColor) {
             if (!lightstickCharacteristic) return;
             
-            // 按照逆向工程解開的格式組裝指令： 
-            // 8201 + 顏色(Hex) + 0000000000 + FD + GRAVE(4752415645)
-            const cmdString = "8201" + hexColor + "0000000000FD4752415645";
+            // 測試 1：先發送一個「喚醒/取得版本」的指令 (ReqVersion)
+            const initCmd = "80020000000000000000FD4752415645";
+            const initBytes = new Uint8Array(initCmd.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
             
-            // 將十六進位字串轉換為藍牙需要的 Byte 陣列 (Uint8Array)
-            const bytesArray = new Uint8Array(cmdString.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+            // 原本的變色指令
+            const colorCmd = "8201" + hexColor + "0000000000FD4752415645";
+            const colorBytes = new Uint8Array(colorCmd.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
 
             try {
-                // 使用 WriteWithoutResponse (Type 2) 寫入硬體
-                await lightstickCharacteristic.writeValueWithoutResponse(bytesArray);
-                console.log("成功發送指令:", cmdString);
+                // 先寫入喚醒指令
+                await lightstickCharacteristic.writeValueWithoutResponse(initBytes);
+                console.log("已發送喚醒指令");
+                
+                // 等待 70ms (模仿官方的節拍器)
+                await new Promise(r => setTimeout(r, 70));
+                
+                // 連續寫入兩次顏色指令 (確保手燈沒有漏接)
+                await lightstickCharacteristic.writeValueWithoutResponse(colorBytes);
+                await new Promise(r => setTimeout(r, 70));
+                await lightstickCharacteristic.writeValueWithoutResponse(colorBytes);
+                console.log("成功發送顏色指令:", colorCmd);
+                
             } catch (error) {
                 console.error("寫入失敗:", error);
+                
+                // 測試 2：如果 WithoutResponse 失敗或沒反應，嘗試標準寫入
+                try {
+                    await lightstickCharacteristic.writeValue(colorBytes);
+                    console.log("嘗試使用標準 writeValue 發送成功");
+                } catch (e) {
+                    console.error("標準寫入也失敗:", e);
+                }
             }
         }
 
