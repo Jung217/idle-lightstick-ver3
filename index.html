@@ -600,6 +600,7 @@
             const gHex = g.toString(16).padStart(2, '0').toUpperCase();
             const bHex = b.toString(16).padStart(2, '0').toUpperCase();
             const colorPayload = `${rHex}${gHex}${bHex}00`; // RGBW
+            const blackPayload = `00000000`; // 暗掉的 RGBW
 
             // 每 150 毫秒點亮下一顆燈
             seqLightInterval = setInterval(async () => {
@@ -609,20 +610,20 @@
                     return;
                 }
 
-                // 810D 協定: 810D + 起始位置(0000~003F) + 第一顆顏色 + 第二顆顏色...
-                // 這裡我們每次只亮目前這一顆，之前的燈珠會保持亮度(若是全域控制的變種)，
-                // 實務上 810D 是覆寫陣列。更嚴格的做法是送出一整段包含前面都亮著的陣列，
-                // 但根據之前實驗 5 的經驗： `810D0000FF0000000000FF00`
-                // 這裡我們嘗試動態組裝：從第 0 顆開始，長度視 seqCurrentPixel 而定
-                let cmdArray = "810D" + "0000"; // 從 0 號燈珠開始覆寫
+                // 根據實驗四經驗：8202 + 超長字串 (明文傳輸)
+                let cmdString = "8202";
 
-                // 將 0 ~ seqCurrentPixel 的燈珠塞入顏色
-                for (let i = 0; i <= seqCurrentPixel; i++) {
-                    cmdArray += colorPayload;
+                // 動態組裝字串
+                for (let i = 0; i < TOTAL_PIXELS; i++) {
+                    if (i <= seqCurrentPixel) {
+                        cmdString += colorPayload;
+                    } else {
+                        cmdString += blackPayload;
+                    }
                 }
 
-                // 810D (依據之前的探勘) 是不需要加密的明文傳輸
-                await sendRawData(cmdArray, false);
+                // 8202 是透過明文傳輸不加密
+                await sendRawData(cmdString, false);
 
                 seqCurrentPixel++;
             }, 200);
