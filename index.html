@@ -470,7 +470,7 @@
             showToast("手燈已斷開連線", "error");
         }
 
-        async function sendRawData(hexString, useEncryption = true) {
+        async function sendRawData(hexString, useEncryption = true, forceChunking = false) {
             if (!lightstickCharacteristic) return;
 
             // 避免重複發送完全相同的指令
@@ -480,8 +480,20 @@
             try {
                 const finalHex = useEncryption ? encryptCommand(hexString) : hexString;
                 const bytesArray = new Uint8Array(finalHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-                await lightstickCharacteristic.writeValueWithoutResponse(bytesArray);
-                console.log(`[送出] 原始: ${hexString} -> 加密: ${finalHex}`);
+
+                // 為了避免藍牙底層 MTU=23 (Payload=20) 限制導致直接截斷，
+                // 如果長度超過 20 Bytes，則手動分成小塊 (Chunks) 傳送
+                const CHUNK_SIZE = 20;
+                for (let i = 0; i < bytesArray.length; i += CHUNK_SIZE) {
+                    const chunk = bytesArray.slice(i, i + CHUNK_SIZE);
+                    await lightstickCharacteristic.writeValueWithoutResponse(chunk);
+                    // 稍微延遲避免發送過快塞車
+                    if (bytesArray.length > CHUNK_SIZE) {
+                        await new Promise(resolve => setTimeout(resolve, 20));
+                    }
+                }
+
+                console.log(`[送出] 原始: ${hexString} -> 加密(${useEncryption}): ${finalHex} (${bytesArray.length} bytes)`);
             } catch (error) {
                 console.error("寫入失敗:", error);
                 // 有可能因為斷線導致寫入失敗，但 gattserverdisconnected 事件還沒立刻觸發
