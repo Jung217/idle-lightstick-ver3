@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>手燈駭客控制台</title>
+    <title>Lightstick Hacker</title>
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
@@ -97,112 +97,85 @@
 
     <div id="toast-container"></div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
     <script>
-        // 拆 apk 找到的 UUID
         const TARGET_UUID = "00000000-0000-1000-8000-00805f9b34fb";
         let lightstickCharacteristic = null;
 
-        // --- 新增：產生小提示的函數 ---
+        // 官方 AES 加密金鑰
+        const AES_KEY_HEX = "2174516473A1F5351004A13E6B716AB9";
+
         function showToast(message, type = "info") {
+            // ... (保留你原本的 showToast 邏輯) ...
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            
-            // 根據傳入的 type 設定不同的 class (success, error, info)
             toast.className = `toast ${type}`;
-            
-            // 設定 icon
-            let icon = "ℹ️";
-            if (type === "success") icon = "✅";
-            if (type === "error") icon = "❌";
-            
-            toast.innerText = `${icon} ${message}`;
+            toast.innerText = message;
             container.appendChild(toast);
-
-            // 3秒後自動加入淡出動畫，動畫結束後移除 DOM 元素
             setTimeout(() => {
                 toast.classList.add('fade-out');
                 toast.addEventListener('animationend', () => toast.remove());
             }, 3000);
         }
 
-        // 1. 藍牙連線邏輯
+        function encryptCommand(hexString) {
+            // 解析金鑰和明文為 CryptoJS 格式
+            const key = CryptoJS.enc.Hex.parse(AES_KEY_HEX);
+            const plaintext = CryptoJS.enc.Hex.parse(hexString);
+            
+            // 使用 AES-ECB-NoPadding 加密
+            const encrypted = CryptoJS.AES.encrypt(plaintext, key, {
+                mode: CryptoJS.mode.ECB,
+                padding: CryptoJS.pad.NoPadding
+            });
+            
+            // 將加密後的結果轉回 Hex 字串
+            return encrypted.ciphertext.toString(CryptoJS.enc.Hex).toUpperCase();
+        }
+
         document.getElementById('connectBtn').addEventListener('click', async () => {
-            const statusText = document.getElementById('status');
             try {
-                statusText.innerText = "狀態：正在請求藍牙權限...";
-                
-                // 起用瀏覽器的藍牙配對，並過濾出的手燈
+                showToast("正在請求藍牙權限...", "info");
                 const device = await navigator.bluetooth.requestDevice({
                     filters: [{ services: [TARGET_UUID] }]
                 });
-
-                statusText.innerText = "狀態：正在連線到 " + device.name + "...";
-                
-                // 建立連線並取得通訊特徵值 (Characteristic)
                 const server = await device.gatt.connect();
                 const service = await server.getPrimaryService(TARGET_UUID);
                 lightstickCharacteristic = await service.getCharacteristic(TARGET_UUID);
 
-                statusText.innerText = "狀態：連線成功！";
                 showToast("手燈連線成功！", "success");
-                
-                // 解鎖變色按鈕
                 document.querySelectorAll('.color-btns button').forEach(btn => btn.disabled = false);
-
             } catch (error) {
-                statusText.innerText = "連線失敗或取消";
                 showToast("連線失敗: " + error.message, "error");
             }
         });
 
-        // 2. 發送指令邏輯
         async function sendColorCommand(hexColor) {
-            if (!lightstickCharacteristic) {
-                showToast("請先連線手燈！", "error");
-                return;
-            }
+            if (!lightstickCharacteristic) return;
             
-            // 測試 1：先發送一個「喚醒/取得版本」的指令 (ReqVersion)
-            const initCmd = "80020000000000000000FD4752415645";
-            const initBytes = new Uint8Array(initCmd.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-            
-            // 原本的變色指令
-            const colorCmd = "8201" + hexColor + "0000000000FD4752415645";
-            const colorBytes = new Uint8Array(colorCmd.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-
             try {
-                // 先寫入喚醒指令
-                await lightstickCharacteristic.writeValueWithoutResponse(initBytes);
-                showToast("已發送喚醒指令", "info");
+                // 1. 組裝原始指令 (明文)
+                const rawCmd = "8201" + hexColor + "0000000000FD4752415645";
                 
-                // 等待 70ms (模仿官方的節拍器)
-                await new Promise(r => setTimeout(r, 70));
+                // 2. 使用 AES 加密指令
+                const encryptedHex = encryptCommand(rawCmd);
                 
-                // 連續寫入兩次顏色指令 (確保手燈沒有漏接)
+                // 3. 轉成藍牙 Byte Array
+                const colorBytes = new Uint8Array(encryptedHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+
+                // 4. 寫入硬體
                 await lightstickCharacteristic.writeValueWithoutResponse(colorBytes);
-                await new Promise(r => setTimeout(r, 70));
-                await lightstickCharacteristic.writeValueWithoutResponse(colorBytes);
-                
-                // 把原本的 console.log 換成小提示
-                showToast(`成功發送顏色: #${hexColor}`, "success");
+                showToast(`已發送加密顏色: #${hexColor}`, "success");
                 
             } catch (error) {
                 showToast(`寫入失敗: ${error.message}`, "error");
-                
-                // 測試 2：如果 WithoutResponse 失敗或沒反應，嘗試標準寫入
-                try {
-                    await lightstickCharacteristic.writeValue(colorBytes);
-                    showToast("嘗試使用標準寫入成功", "success");
-                } catch (e) {
-                    showToast(`標準寫入也失敗: ${e.message}`, "error");
-                }
             }
         }
 
-        // 3. 綁定按鈕事件 (傳入對應的 RGB Hex 碼)
         document.getElementById('redBtn').addEventListener('click', () => sendColorCommand("FF0000"));
         document.getElementById('blueBtn').addEventListener('click', () => sendColorCommand("0000FF"));
-        document.getElementById('purpleBtn').addEventListener('click', () => sendColorCommand("5E0D8B")); // 官方紫色
+        document.getElementById('purpleBtn').addEventListener('click', () => sendColorCommand("5E0D8B")); 
         document.getElementById('offBtn').addEventListener('click', () => sendColorCommand("000000"));
     </script>
 </body>
